@@ -1,0 +1,49 @@
+version: '3'
+services:
+  redis:
+    image: redis
+  presidio-analyzer:
+    environment:
+      - GRPC_PORT=3000
+      - RECOGNIZERS_STORE_SVC_ADDRESS=presidio-recognizers-store:3004
+      - LOG_LEVEL=DEBUG
+    image: mcr.microsoft.com/presidio-analyzer:latest
+  presidio-anonymizer:
+    environment:
+      - GRPC_PORT=3001
+    image: mcr.microsoft.com/presidio-anonymizer:latest
+  presidio-recognizers-store:
+    environment:
+      - GRPC_PORT=3004
+      - REDIS_URL=redis:6379
+    image: mcr.microsoft.com/presidio-recognizers-store:latest
+  presidio-api:
+    depends_on:
+      - presidio-recognizers-store
+      - presidio-analyzer
+      - presidio-anonymizer
+    environment:
+      - WEB_PORT=8080
+      - ANALYZER_SVC_ADDRESS=presidio-analyzer:3000
+      - ANONYMIZER_SVC_ADDRESS=presidio-anonymizer:3001
+      - RECOGNIZERS_STORE_SVC_ADDRESS=presidio-recognizers-store:3004
+    image: mcr.microsoft.com/presidio-api:latest
+    ports:
+      - 8080
+  vgs-anonymizer:
+    build: .
+    image: vgs-test:latest
+    depends_on:
+      - presidio-api
+    entrypoint: sh -c './wait-for presidio-api:8080 -t 60 -- java -jar app.jar'
+    environment:
+      - PRESIDIO_ADDRESS=http://presidio-api:8080
+      - GRPC_PORT=3005
+  test:
+    image: vgs-test:latest
+    entrypoint: sh -c './wait-for vgs-anonymizer:3005 -t 60 -- java -jar app.jar test'
+    depends_on:
+      - vgs-anonymizer
+    environment:
+      - GRPC_PORT=3005
+      - GRPC_SERVER_HOST=vgs-anonymizer

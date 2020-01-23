@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package analysss;
+
+option java_package = "proto";
+option java_outer_classname = "AnalysisServiceProto";
+
+service AnalysisService {
+    rpc Analyze (AnalysisRequest) returns (AnalysisReply) {
+    }
+}
+
+message AnalysisRequest {
+    string text = 1;
+}
+
+message AnalysisReply {
+    string text = 2;
+}

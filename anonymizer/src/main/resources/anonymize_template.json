@@ -1,0 +1,1 @@
+{"fieldTypeTransformations": [{"fields": [{"name": "PHONE_NUMBER"}], "transformation": {"replaceValue": {"newValue": "'phone-number'"}}}, {"fields": [{"name": "CREDIT_CARD"}], "transformation": {"replaceValue": {"newValue": "**** **** **** ****"}}}]}
